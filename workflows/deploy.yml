@@ -1,0 +1,81 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Enironnement de déploiement"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.18.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+      
+      - name: Upload build
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+test:
+  needs: build
+  runs-on: ubuntu-latest
+
+  strategy:
+    matrix:
+      configuration:
+        - node-20
+        - node-22
+
+  steps:
+    - name: Download build
+      uses: actions/download-artifact@v7
+      with:
+        name: dist
+        path: dist/
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ matrix.configuration == 'node-20' && '20' || '22' }}
+
+        - name: Test build
+          run: |
+            echo "## Test de la configuration ${{ matrix.configuration }}"
+            ls -l dist/
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy
+        run: |
+          echo "## Déploiement" >> "$GITHUB_STEP_SUMMARY"
+          echo "Environnement: ${{ inputs.environment }}" >> "$GITHUB_STEP_SUMMARY"
