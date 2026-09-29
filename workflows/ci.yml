@@ -22,7 +22,5 @@ jobs:
 
         run: |
           echo "## Validation" >> "$GITHUB_STEP_SUMMARY"
-          echo "$status : $GITHUB_JOB" >> "$GITHUB_STEP_SUMMARY"
-          echo "## Logs" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Test Logs" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "$Status : $GITHUB_JOB" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
