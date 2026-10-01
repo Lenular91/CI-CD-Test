@@ -5,7 +5,7 @@ on:
 
 jobs:
   hello:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -23,4 +23,4 @@ jobs:
         run: |
           echo "## Validation" >> "$GITHUB_STEP_SUMMARY"
           echo "Status : ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit : \"${{ github.sha }}\"" >> "$GITHUB_STEP_SUMMARY"
