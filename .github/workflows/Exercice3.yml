@@ -11,6 +11,9 @@ on:
           - staging
           - production
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-26.04
@@ -23,7 +26,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -34,48 +36,61 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v7
         with:
-          name: dist
+          name: application
           path: dist/
 
   test:
     needs: build
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
+      max-parallel: 2
       matrix:
-        configuration:
-          - node-20
-          - node-22
+        os:
+          - ubuntu-26.04
+          - windows-2025
+        node-version:
+          - 20
+          - 22
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Download build
         uses: actions/download-artifact@v7
         with:
-          name: dist
+          name: application
           path: dist/
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.configuration == 'node-20' && '20' || '22' }}
+          node-version: ${{ matrix.node-version }}
 
-      - name: Test build
-        run: |
-          echo "## Test de la configuration ${{ matrix.configuration }}" >> "$GITHUB_STEP_SUMMARY"
-          ls -l dist/
+      - name: Run tests
+        run: npm test
 
   deploy:
     needs: test
     runs-on: ubuntu-26.04
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Download build
         uses: actions/download-artifact@v7
         with:
-          name: dist
+          name: application
           path: dist/
 
       - name: Deploy
         run: |
+          echo "API_URL: ${{ vars.API_URL }}"
+
+      - name: Deploy Summary
+        run: |
           echo "## Déploiement" >> "$GITHUB_STEP_SUMMARY"
-          echo "Environnement: ${{ inputs.environment }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cible : ${{ inputs.environment }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "URL : ${{ vars.API_URL }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit : ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
