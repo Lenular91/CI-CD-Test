@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Enironnement de déploiement"
+        description: "Environnement de déploiement"
         required: true
         type: choice
         options:
@@ -30,39 +30,39 @@ jobs:
 
       - name: Build application
         run: npm run build
-      
+
       - name: Upload build
         uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
 
-test:
-  needs: build
-  runs-on: ubuntu-latest
+  test:
+    needs: build
+    runs-on: ubuntu-latest
 
-  strategy:
-    matrix:
-      configuration:
-        - node-20
-        - node-22
+    strategy:
+      matrix:
+        configuration:
+          - node-20
+          - node-22
 
-  steps:
-    - name: Download build
-      uses: actions/download-artifact@v7
-      with:
-        name: dist
-        path: dist/
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v7
-      with:
-        node-version: ${{ matrix.configuration == 'node-20' && '20' || '22' }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.configuration == 'node-20' && '20' || '22' }}
 
-        - name: Test build
-          run: |
-            echo "## Test de la configuration ${{ matrix.configuration }}"
-            ls -l dist/
+      - name: Test build
+        run: |
+          echo "## Test de la configuration ${{ matrix.configuration }}" >> "$GITHUB_STEP_SUMMARY"
+          ls -l dist/
 
   deploy:
     needs: test
